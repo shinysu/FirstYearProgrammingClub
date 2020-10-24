@@ -5,51 +5,58 @@ filename = 'tasks.txt'
 tasks = file_read(filename)
 
 layout = [
-    [sg.Text('ToDo',font=("Arial", 14))],
-    [sg.InputText('', size=(40,1), font=("Arial", 14), key='todo_item'),
-     sg.Button(button_text='Add', font=("Arial", 14), key='add_save')],
-    [sg.Listbox(values=tasks, size=(40, 10), font=("Arial", 14), key='items'), sg.Button('Delete', font=("Arial", 14)),
-     sg.Button('Edit', font=("Arial", 14))],
+    [sg.Text('Week1',font=("Arial", 14))],
+    [sg.InputText('', size=(40,1), font=("Arial", 14), key='todo_item', enable_events=True),
+     sg.Button(button_text='Add', bind_return_key=True, font=("Arial", 14), key='add_save', disabled=True)],
+    [sg.Listbox(values=tasks, size=(40, 10), font=("Arial", 14), key='items', enable_events=True),
+     sg.Button('Delete', font=("Arial", 14), key='delete', disabled=True),
+     sg.Button('Edit', key='edit', font=("Arial", 14), disabled=True)],
 ]
 
+def check_enable_buttons():
+    if values["items"]:
+        window.FindElement('delete').Update(disabled=False)
+        window.FindElement('edit').Update(disabled=False)
+    if values["todo_item"].strip() != '':
+        window.FindElement('add_save').Update(disabled=False)
 
 def add_tasks(values):
-    tasks.append(values['todo_item'])
+    newtask = values['todo_item'].strip()
+    if newtask:
+        tasks.append(newtask)
     window.FindElement('todo_item').Update(value="")
     window.FindElement('items').Update(values=tasks)
     window.FindElement('add_save').Update("Add")
+    window.FindElement('add_save').Update(disabled=True)
 
 
 def delete_tasks(values):
-    try:
-        tasks.remove(values["items"][0])
-    except IndexError:
-        sg.popup("\nChoose a task to delete\n", title="Error!!!", background_color="white", text_color="red", font=("Arial", 14))
+    tasks.remove(values["items"][0])
     window.FindElement('items').Update(values=tasks)
 
 
 def edit_tasks(values):
-    try:
-        edit_val = values["items"][0]
-        tasks.remove(edit_val)
-        window.FindElement('todo_item').Update(value=edit_val)
-        window.FindElement('add_save').Update("Save")
-    except IndexError:
-        sg.popup("\nChoose a task to edit\n", title="Error!!!", background_color="white", text_color="red", font=("Arial", 14))
+    edit_val = values["items"][0]
+    print(edit_val)
+    tasks.remove(edit_val)
+    window.FindElement('todo_item').Update(value=edit_val)
+    window.FindElement('add_save').Update("Save")
 
 
 if __name__ == '__main__':
-    window = sg.Window('ToDo App', layout)
+    window = sg.Window('Week1 App', layout)
     while True:
         event, values = window.Read()
-
+        if event == sg.WINDOW_CLOSED:
+            break
+        else:
+            check_enable_buttons()
         if event == "add_save":
             add_tasks(values)
-        elif event == "Delete":
+        elif event == "delete":
             delete_tasks(values)
-        elif event == "Edit":
+        elif event == "edit":
             edit_tasks(values)
-        elif event == sg.WINDOW_CLOSED:
-            break
+
     file_write(filename, tasks)
     window.Close()
