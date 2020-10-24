@@ -1,5 +1,5 @@
 '''
-Create a simple todo list app using PySimpleGUI
+Create a simple todo app using PySimpleGUI
 '''
 
 import PySimpleGUI as sg
