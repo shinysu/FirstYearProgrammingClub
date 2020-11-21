@@ -7,37 +7,41 @@ bot.py : Given an url, analyses the webpage and gives the following information 
 """
 
 import PySimpleGUI as sg
-from webutils import get_statistics
+from webutils import get_content_from_url, parse_html_by_tags
+from utils import get_statistics
+
 
 layout = [
             [sg.Text("Enter URL", font=("Arial", 14)), sg.InputText("", key="url", font=("Arial", 14)),
-             sg.Button("Get Data", font=("Arial", 14), key='get')],
+             sg.Button("Get Data", font=("Arial", 14), key='get', bind_return_key=True)],
             [sg.Multiline(key="output", font=("Arial", 14), size=(60, 15), disabled=True)],
         ]
 
-def get_and_display_statistics(url):
+
+def get_details(url):
+    """
+    Gets the webpage content for the url and determines the count of lines, words, unique words and the top 5 most
+    frequent words from the page
+    :param url: url of the web page
+    """
+    html_page = get_content_from_url(url)
+    data = parse_html_by_tags(html_page, 'p')
+    statistics = get_statistics(data)
+    display_statistics(statistics)
+
+
+def display_statistics(statistics):
     """
     Analyses the web page of the url and displays the count of lines, word, unique words and the 5 most frequent words
-    :param url: the url of the web page that is to be analysed
+    :param statistics: the count of lines, words and unique words and the top 5 most frequent words from the page
     """
-    line_count, words_count, unique_words, top_words = get_statistics(url)
-    display_statistics(line_count, words_count, unique_words, top_words)
-
-
-def display_statistics(line_count, words_count, unique_words, top_words):
-    """
-    displays the count of lines, word, unique words and the 5 most frequent words
-    :param line_count: the number of sentences in the web page
-    :param words_count: the number of words in the web page
-    :param unique_words: the number of unique words in the page
-    :param top_words: 5 most frequent words in the page
-    """
+    window['output'].Update('')
     window['output'].print("The web page consists of the following information:\n")
-    window['output'].print(line_count, "sentences")
-    window['output'].print(words_count, "words")
-    window['output'].print(unique_words, "unique words")
+    window['output'].print(statistics['line_count'], "sentences")
+    window['output'].print(statistics['words_count'], "words")
+    window['output'].print(statistics['unique_words'], "unique words")
     window['output'].print("\nThe top words are\n")
-    for word, count in top_words:
+    for word, count in statistics['top_words']:
         window['output'].print(word)
 
 
@@ -48,6 +52,6 @@ if __name__ == '__main__':
         if event == sg.WINDOW_CLOSED:
             break
         elif event == 'get':
-            get_and_display_statistics(values['url'])
+            get_details(values['url'])
     window.Close()
 

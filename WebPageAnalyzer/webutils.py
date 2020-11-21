@@ -1,21 +1,5 @@
 from bs4 import BeautifulSoup
 import requests
-from utils import get_lines, get_words, get_top_words
-
-
-def get_statistics(url):
-    """
-    Gets the webpage content from the url and determines the count of lines, words, unique words and the top 5 most
-    frequent words from the page
-    :param url: url of the web page
-    :return: the count of lines, words, unique words and the top 5 most frequent words from the page
-    """
-    html_page = get_content_from_url(url)
-    data = get_content_by_tags(html_page, 'p')
-    lines = get_lines(data)
-    words, unique_words = get_words(lines)
-    top_words = get_top_words(words)
-    return len(lines), len(words), len(unique_words), top_words
 
 
 def get_content_from_url(url):
@@ -25,16 +9,22 @@ def get_content_from_url(url):
     :return: HTML content of the page
     """
     try:
+        url = url if url.startswith('http') else ('http://' + url)
         return requests.get(url).content
     except requests.ConnectionError as e:
-        print("Connection Error. Make sure you are connected to Internet.\n")
+        print("Connection Error: Could not connect to the server or not found.\n")
         print(str(e))
     except requests.Timeout as e:
         print("Timeout Error")
         print(str(e))
+    except requests.RequestException as e:
+        print("General Error")
+        print(str(e))
+    except KeyboardInterrupt:
+        print("Keyboard interrupt")
 
 
-def get_content_by_tags(html, tag):
+def parse_html_by_tags(html, tag):
     """
     parses the HTML page and gets the text of the given tag
     :param html: the html content that is to be parsed
@@ -42,17 +32,8 @@ def get_content_by_tags(html, tag):
     :return: text data of the corresponding tag from the webpage
     """
     data = []
-    soup = BeautifulSoup(html, "html.parser")
-    for para in soup.find_all(tag):
-        data.append(para.text)
+    if html:
+        soup = BeautifulSoup(html, "html.parser")
+        for para in soup.find_all(tag):
+            data.append(para.text)
     return data
-
-
-if __name__ == "__main__":
-    url = 'https://www.edutopia.org/article/help-students-build-intrinsic-motivation'
-    line_count, words_count, unique_words, top_words = get_statistics(url)
-    print(line_count)
-    print(words_count)
-    print(unique_words)
-    print(top_words)
-
